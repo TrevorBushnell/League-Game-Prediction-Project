@@ -85,6 +85,17 @@ def compute_clf_stats(clf,X,y,clf_name):
     print("binary precision: ", precision)
     print("binary recall: ", recall)
     print("f1 score: ", f1_score)
-    matrix = myevaluation.confusion_matrix(y_test,y_pred_clf,["A","H"])
+    labels = [y_pred_clf[0]]
+    for value in y_pred_clf:
+            if labels.count(value) > 0:
+                pass
+            else:
+                labels.append(value)
+    for value in y_test:
+        if labels.count(value) > 0:
+                pass
+        else:
+            labels.append(value)
+    matrix = myevaluation.confusion_matrix(y_test,y_pred_clf,labels)
     print("Confusion Matrix")
     print(matrix)
