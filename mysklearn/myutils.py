@@ -4,7 +4,7 @@ import mysklearn.mypytable
 from mysklearn.mypytable import MyPyTable 
 
 
-
+import copy
 
 import mysklearn.myevaluation
 import mysklearn.myevaluation as myevaluation
@@ -63,16 +63,9 @@ def get_rows(indexes,lst):
     return new_lst
 
 def compute_clf_stats(clf,X,y,clf_name):
-    X_train_folds,X_test_folds = myevaluation.stratified_kfold_cross_validation(X,y,n_splits=10)
-    y_pred_clf = []
-    y_test = []
-    for i in range(len(X_train_folds)):
-        X_train = get_rows(X_train_folds[i],X)
-        X_test = get_rows(X_test_folds[i],X)
-        y_train = get_rows(X_train_folds[i],y)
-        y_test += get_rows(X_test_folds[i],y)
-        clf.fit(X_train,y_train)
-        y_pred_clf += clf.predict(X_test)
+    X_train, X_test, y_train,y_test = myevaluation.train_test_split(X,y,random_state=0)
+    clf.fit(X_train,y_train)
+    y_pred_clf = clf.predict(X_test)
     
     accuracy = myevaluation.accuracy_score(y_test,y_pred_clf)
     print()
@@ -99,3 +92,29 @@ def compute_clf_stats(clf,X,y,clf_name):
     matrix = myevaluation.confusion_matrix(y_test,y_pred_clf,labels)
     print("Confusion Matrix")
     print(matrix)
+
+def binning(column):
+    bins = 10
+    sort_list = column.copy()
+    sort_list.sort()
+    max = sort_list[-1]
+    min = sort_list[0]
+    if max - min < 10:
+        bins = int(max - min)
+    if bins == 1:
+        for i in range(len(column)):
+            column[i] = str(column[i])
+    else:
+        sub_interval = (max - min) // bins
+        for i in range(len(column)):
+            for j in range(bins):
+                if column[i] <= min +j*sub_interval:
+                    if j ==0:
+                        column[i] = str(min +(j)*sub_interval) + " - " + str(min +(j+1)*sub_interval)
+                    else:
+                        column[i] = str(min +(j-1)*sub_interval) + " - " + str(min +(j)*sub_interval)
+                    break
+    return column
+
+    
+
