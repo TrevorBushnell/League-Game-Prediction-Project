@@ -9,7 +9,7 @@
 # for the Decision Tree Classifier
 ##############################################
 
-from mysklearn import myutils
+from mysklearn import myevaluation, myutils
 
 # TODO: copy your myclassifiers.py solution from PA4-6 here
 import operator
@@ -631,3 +631,73 @@ class MyDecisionTreeClassifier:
             for i in range(2, len(tree)):
                 value_list = tree[i]
                 self.traverse_tree(header, value_list[2], rule + header[int(tree[1][-1])] + "=" + value_list[1] + " AND ",class_name)
+
+
+class MyRandomForestClassifier:
+
+    def __init__(self):
+        """Initializer for MyDecisionTreeClassifier.
+        """
+        self.M = 0
+        self.N = 0
+        self.F = 0
+        self.forest = None
+        self.attibute_domains = None
+        self.header = []
+    
+    def fit(self,X,y,M,N,F,random_state=0):
+        self.header = ["att" + str(i) for i in range(len(X_train[0]))]
+        att_domain = dict()
+        for i in range(len(self.header)):
+            attributes = [X_train[0][i]]
+            for j in range(len(X_train)):
+                if attributes.count(X_train[j][i])==0:
+                    attributes.append(X_train[j][i])
+                else: 
+                    pass
+            att_domain[self.header[i]] = attributes
+        self.attribute_domains = att_domain
+        
+        np.random.seed(random_state)
+        att_indexes = list(range(len(X[0])))
+        temp_forest = []
+        temp_accuracy = []
+
+        for i in range(M):
+            X_train,X_test,y_train,y_test = myevaluation.bootstrap_sample(X,y,random_state=random_state)
+            selected_att = self.compute_random_subset(att_indexes,F)
+            X_train = [[row[value] for value in selected_att] for row in X_train]
+            X_test = [[row[value] for value in selected_att] for row in X_train]
+            train = [X_train[i]+[y_train[i]] for i in range(len(X_train))]
+            
+            tree_clf = MyDecisionTreeClassifier()
+            tree_clf.fit(train)
+            temp_forest.append(tree_clf)
+            y_pred = tree_clf.predict(X_test)
+            temp_accuracy.append(myevaluation.accuracy_score(y_test,y_pred))
+        for i in range(M-N):
+            temp_forest.pop(temp_accuracy.index(min(temp_accuracy)))
+            temp_accuracy.pop(temp_accuracy.index(min(temp_accuracy)))
+        self.forest = temp_forest
+    
+    def predict(self,X_test):
+        y_pred = []
+        votes = []
+        for i in range(len(self.forest)):
+            votes.append(self.forest[i].predict(X_test))
+        for i in range(len(X_test)):
+            vote = []
+            vote_count = []
+            for j in range(len(votes)):
+                vote.append(votes[j][i])
+            for value in self.attibute_domains:
+                vote_count.append(vote.count(value))
+            y_pred.append(self.attibute_domains[vote_count.index(max(vote_count))])
+        return y_pred             
+                
+    def compute_random_subset(self,values, num_values):
+        # there is a function np.random.choice()
+        values_copy = values[:] # shallow copy
+        np.random.shuffle(values_copy) # in place shuffle
+        return values_copy[:num_values]
+            
