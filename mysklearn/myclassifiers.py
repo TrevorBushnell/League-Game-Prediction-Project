@@ -405,7 +405,7 @@ class MyDecisionTreeClassifier:
         self.attribute_domains = None
         self.attribute_range = None
 
-    def fit(self, X_train, y_train):
+    def fit(self, X_train, y_train,available_atts = 0):
         """Fits a decision tree classifier to X_train and y_train using the TDIDT
         (top down induction of decision tree) algorithm.
 
@@ -446,6 +446,12 @@ class MyDecisionTreeClassifier:
         train = [X_train[i]+[y_train[i]] for i in range(len(X_train))]
         # next, make a copy of your header... tdidt() is going
         # to modify the list
+        if available_atts != 0:
+            temp_header = list(self.header.copy())
+            for value in (self.header):
+                if available_atts.count(int(value[-1])) == 0:
+                    self.header.remove(value)
+            self.header = temp_header
         available_attributes = self.header.copy()
         instances = train.copy()
         # also: recall that python is pass by object reference
@@ -642,22 +648,17 @@ class MyRandomForestClassifier:
         self.N = 0
         self.F = 0
         self.forest = None
-        self.attibute_domains = None
-        self.header = []
+        self.attribute_range = None
     
     def fit(self,X,y,M,N,F,random_state=0):
-        self.header = ["att" + str(i) for i in range(len(X_train[0]))]
-        att_domain = dict()
-        for i in range(len(self.header)):
-            attributes = [X_train[0][i]]
-            for j in range(len(X_train)):
-                if attributes.count(X_train[j][i])==0:
-                    attributes.append(X_train[j][i])
-                else: 
-                    pass
-            att_domain[self.header[i]] = attributes
-        self.attribute_domains = att_domain
-        
+        att_range = [y[0]]
+        for i in range(len(y)):
+            if att_range.count(y[i]) ==0:
+                att_range.append(y[i])
+            else:
+                pass
+        self.attribute_range = att_range
+          
         np.random.seed(random_state)
         att_indexes = list(range(len(X[0])))
         temp_forest = []
@@ -666,12 +667,9 @@ class MyRandomForestClassifier:
         for i in range(M):
             X_train,X_test,y_train,y_test = myevaluation.bootstrap_sample(X,y,random_state=random_state)
             selected_att = self.compute_random_subset(att_indexes,F)
-            X_train = [[row[value] for value in selected_att] for row in X_train]
-            X_test = [[row[value] for value in selected_att] for row in X_train]
-            train = [X_train[i]+[y_train[i]] for i in range(len(X_train))]
             
             tree_clf = MyDecisionTreeClassifier()
-            tree_clf.fit(train)
+            tree_clf.fit(X_train,y_train,available_atts=selected_att)
             temp_forest.append(tree_clf)
             y_pred = tree_clf.predict(X_test)
             temp_accuracy.append(myevaluation.accuracy_score(y_test,y_pred))
@@ -690,9 +688,9 @@ class MyRandomForestClassifier:
             vote_count = []
             for j in range(len(votes)):
                 vote.append(votes[j][i])
-            for value in self.attibute_domains:
+            for value in self.attribute_range:
                 vote_count.append(vote.count(value))
-            y_pred.append(self.attibute_domains[vote_count.index(max(vote_count))])
+            y_pred.append(self.attribute_range[vote_count.index(max(vote_count))])
         return y_pred             
                 
     def compute_random_subset(self,values, num_values):
