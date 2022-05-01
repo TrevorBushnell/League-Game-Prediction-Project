@@ -687,13 +687,17 @@ class MyRandomForestClassifier:
         for i in range(M-N):
             temp_forest.pop(temp_accuracy.index(min(temp_accuracy)))
             temp_accuracy.pop(temp_accuracy.index(min(temp_accuracy)))
+        print("fitted")
         self.forest = temp_forest
     
     def predict(self,X_test):
+        print("predicting2")
         y_pred = []
         votes = []
         for i in range(len(self.forest)):
+            print(i)
             votes.append(self.forest[i].predict(X_test))
+        print("predicing 3")
         for i in range(len(X_test)):
             print(i)
             vote = []
