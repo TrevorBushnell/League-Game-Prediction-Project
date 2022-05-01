@@ -5,6 +5,7 @@ from mysklearn import myutils
 from math import ceil
 from mysklearn import myutils
 import numpy as np
+import copy
 
 def train_test_split(X, y, test_size=0.33, random_state=None, shuffle=True):
     """Split dataset into train and test sets based on a test set size.
@@ -171,10 +172,10 @@ def bootstrap_sample(X, y=None, n_samples=None, random_state=None):
     for i in range(n_samples):
         rand_index = np.random.randint(0,len(X))
         rand_index_list.append(rand_index)
-        X_sample.append(X[rand_index])
+        X_sample.append(copy.deepcopy(X[rand_index]))
     for h in range(len(X)):
         if rand_index_list.count(h)==0:
-            X_out_of_bag.append(X[h])
+            X_out_of_bag.append(copy.deepcopy(X[h]))
     if y == None:
         return X_sample,X_out_of_bag,None,None
     else:
@@ -182,9 +183,9 @@ def bootstrap_sample(X, y=None, n_samples=None, random_state=None):
         y_out_of_bag = []
         for j in range(len(y)):
             if rand_index_list.count(j)== 0:
-                y_out_of_bag.append(y[j])
+                y_out_of_bag.append(copy.deepcopy(y[j]))
         for value in rand_index_list:
-            y_sample.append(y[value])
+            y_sample.append(copy.deepcopy(y[value]))
         return X_sample,X_out_of_bag,y_sample,y_out_of_bag
 
 def confusion_matrix(y_true, y_pred, labels):

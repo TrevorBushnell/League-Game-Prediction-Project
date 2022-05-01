@@ -424,6 +424,19 @@ class MyDecisionTreeClassifier:
             Use attribute indexes to construct default attribute names (e.g. "att0", "att1", ...).
         """
         self.header = ["att" + str(i) for i in range(len(X_train[0]))]
+        if available_atts != 0:
+            temp_header = []
+            for i in range(len(available_atts)):
+                temp_header.append("att" + str(available_atts[i]))
+            self.header = temp_header
+            del_atts = [i for i in range(len(X_train[0]))]
+            for i in sorted(del_atts,reverse=True):
+                if available_atts.count(i) !=0:
+                    del_atts.remove(i)
+            for index in sorted(del_atts,reverse=True):
+                for row in X_train:
+                    del row[index]
+
         att_domain = dict()
         for i in range(len(self.header)):
             attributes = [X_train[0][i]]
@@ -443,15 +456,9 @@ class MyDecisionTreeClassifier:
                 pass
         self.attribute_range = att_range
 
-        train = [X_train[i]+[y_train[i]] for i in range(len(X_train))]
         # next, make a copy of your header... tdidt() is going
         # to modify the list
-        if available_atts != 0:
-            temp_header = list(self.header.copy())
-            for value in (self.header):
-                if available_atts.count(int(value[-1])) == 0:
-                    self.header.remove(value)
-            self.header = temp_header
+        train = [X_train[i]+[y_train[i]] for i in range(len(X_train))]
         available_attributes = self.header.copy()
         instances = train.copy()
         # also: recall that python is pass by object reference
@@ -475,7 +482,7 @@ class MyDecisionTreeClassifier:
         for entry in X_test:
             tree = self.tree.copy()
             while tree[0] != "Leaf":
-                att_index = int(tree[1][-1])
+                att_index = int(tree[1][3:])
                 for i in range(len(tree)-2):
                     if entry[att_index] == tree[i+2][1]:
                         tree = tree[i+2][2]
@@ -658,7 +665,9 @@ class MyRandomForestClassifier:
             else:
                 pass
         self.attribute_range = att_range
-          
+        self.M = M
+        self.N = N
+        self.F = F
         np.random.seed(random_state)
         att_indexes = list(range(len(X[0])))
         temp_forest = []
@@ -666,11 +675,13 @@ class MyRandomForestClassifier:
 
         for i in range(M):
             X_train,X_test,y_train,y_test = myevaluation.bootstrap_sample(X,y,random_state=random_state)
+            np.random.seed(i)
             selected_att = self.compute_random_subset(att_indexes,F)
-            
+            selected_att.sort()
             tree_clf = MyDecisionTreeClassifier()
             tree_clf.fit(X_train,y_train,available_atts=selected_att)
             temp_forest.append(tree_clf)
+            print("predicting")
             y_pred = tree_clf.predict(X_test)
             temp_accuracy.append(myevaluation.accuracy_score(y_test,y_pred))
         for i in range(M-N):
@@ -684,6 +695,7 @@ class MyRandomForestClassifier:
         for i in range(len(self.forest)):
             votes.append(self.forest[i].predict(X_test))
         for i in range(len(X_test)):
+            print(i)
             vote = []
             vote_count = []
             for j in range(len(votes)):

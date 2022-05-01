@@ -69,7 +69,7 @@ def compute_clf_stats(clf,X,y,clf_name):
     
     accuracy = myevaluation.accuracy_score(y_test,y_pred_clf)
     print()
-    print("Stratified 10-Fold Cross Validation")
+    print("Hold-Out Method")
     print(clf_name + " : accuracy = ", accuracy, " error = ", 1 - accuracy)
 
     precision = myevaluation.binary_precision_score(y_test,y_pred_clf)
@@ -95,25 +95,26 @@ def compute_clf_stats(clf,X,y,clf_name):
 
 def binning(column):
     bins = 10
-    sort_list = column.copy()
-    sort_list.sort()
-    max = sort_list[-1]
-    min = sort_list[0]
-    if max - min < 10:
-        bins = int(max - min)
+    max_val = max(column)
+    min_val = min(column)
+    if max_val - min_val < 10:
+        bins = int(max_val - min_val)
     if bins == 1:
         for i in range(len(column)):
             column[i] = str(column[i])
     else:
-        sub_interval = (max - min) // bins
+        sub_interval = (max_val - min_val) // bins
         for i in range(len(column)):
-            for j in range(bins):
-                if column[i] <= min +j*sub_interval:
-                    if j ==0:
-                        column[i] = str(min +(j)*sub_interval) + " - " + str(min +(j+1)*sub_interval)
-                    else:
-                        column[i] = str(min +(j-1)*sub_interval) + " - " + str(min +(j)*sub_interval)
-                    break
+            if column[i] > max_val- sub_interval:
+               column[i] = str(max_val- sub_interval) + " - " + str(max_val)
+            elif column[i] > max_val- 2*sub_interval:
+                column[i] = str(max_val- 2*sub_interval) + " - " + str(max_val- sub_interval)
+            elif column[i] > max_val- 3*sub_interval:
+                column[i] = str(max_val- 3*sub_interval) + " - " + str(max_val- 2*sub_interval)
+            elif column[i] > max_val- 4*sub_interval:
+                column[i] = str(max_val- 4*sub_interval) + " - " + str(max_val- 3*sub_interval)
+            else: 
+                column[i] = str(min_val) + " - " + str(min_val + sub_interval)
     return column
 
     
