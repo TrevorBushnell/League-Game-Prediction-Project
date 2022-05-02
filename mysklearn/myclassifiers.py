@@ -8,6 +8,9 @@
 # Description: This program completes functions and unit tests
 # for the Decision Tree Classifier
 ##############################################
+import copy
+
+from matplotlib.style import available
 
 from mysklearn import myevaluation, myutils
 
@@ -477,12 +480,28 @@ class MyDecisionTreeClassifier:
         Returns:
             y_predicted(list of obj): The predicted target y values (parallel to X_test)
         """
-        tree = self.tree.copy()
+        X_test1 = copy.deepcopy(X_test)
+        if len(self.header) !=len(X_test1[0]):
+            available_atts = [int(value[3:]) for value in self.header]
+            del_atts = [i for i in range(len(X_test1[0]))]
+            for i in sorted(del_atts,reverse=True):
+                if available_atts.count(i) !=0:
+                    del_atts.pop(i)
+            for index in sorted(del_atts,reverse=True):
+                for row in X_test1:
+                    del row[index]
+  
         y_predicted = []
-        for entry in X_test:
-            tree = self.tree.copy()
+        for entry in X_test1:
+            tree = copy.deepcopy(self.tree)   
             while tree[0] != "Leaf":
-                att_index = int(tree[1][3:])
+                att_index = self.header.index(tree[1])
+                if self.attribute_domains[tree[1]].count(entry[att_index]) ==0:
+                    print(tree[1])
+                    print(entry[att_index])
+                    #print(entry)
+                    print(self.attribute_domains[tree[1]])
+                    break
                 for i in range(len(tree)-2):
                     if entry[att_index] == tree[i+2][1]:
                         tree = tree[i+2][2]
@@ -681,7 +700,6 @@ class MyRandomForestClassifier:
             tree_clf = MyDecisionTreeClassifier()
             tree_clf.fit(X_train,y_train,available_atts=selected_att)
             temp_forest.append(tree_clf)
-            print("predicting")
             y_pred = tree_clf.predict(X_test)
             temp_accuracy.append(myevaluation.accuracy_score(y_test,y_pred))
         for i in range(M-N):
@@ -695,11 +713,10 @@ class MyRandomForestClassifier:
         y_pred = []
         votes = []
         for i in range(len(self.forest)):
-            print(i)
-            votes.append(self.forest[i].predict(X_test))
+            tree_clf = self.forest[i]
+            votes.append(tree_clf.predict(X_test))
         print("predicing 3")
         for i in range(len(X_test)):
-            print(i)
             vote = []
             vote_count = []
             for j in range(len(votes)):
