@@ -497,10 +497,7 @@ class MyDecisionTreeClassifier:
             while tree[0] != "Leaf":
                 att_index = self.header.index(tree[1])
                 if self.attribute_domains[tree[1]].count(entry[att_index]) ==0:
-                    print(tree[1])
-                    print(entry[att_index])
-                    #print(entry)
-                    print(self.attribute_domains[tree[1]])
+                    tree[1] = "0.0"
                     break
                 for i in range(len(tree)-2):
                     if entry[att_index] == tree[i+2][1]:
@@ -705,17 +702,14 @@ class MyRandomForestClassifier:
         for i in range(M-N):
             temp_forest.pop(temp_accuracy.index(min(temp_accuracy)))
             temp_accuracy.pop(temp_accuracy.index(min(temp_accuracy)))
-        print("fitted")
         self.forest = temp_forest
     
     def predict(self,X_test):
-        print("predicting2")
         y_pred = []
         votes = []
         for i in range(len(self.forest)):
             tree_clf = self.forest[i]
             votes.append(tree_clf.predict(X_test))
-        print("predicing 3")
         for i in range(len(X_test)):
             vote = []
             vote_count = []
