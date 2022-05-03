@@ -612,7 +612,7 @@ class MyDecisionTreeClassifier:
                         entropy += -((att_count[h][k])/total_count[h] * math.log(att_count[h][k]/total_count[h],2))
                 entropy = entropy* (total_count[h]) / len(instances)
                 avg_entropy+=entropy
-            enew.append(avg_entropy)          
+            enew.append(avg_entropy)        
         return attributes[enew.index(min(enew))]
 
     def partition_instances(self,instances, split_attribute):
