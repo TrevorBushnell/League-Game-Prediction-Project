@@ -93,7 +93,6 @@ def predict_winner(instance):
         del entry[4:]
     tree_clf = MyDecisionTreeClassifier()
     tree_clf.fit(X,y)
-    print(instance)
     # prediction time!!
     try:
         prediction = tree_clf.predict(instance)
