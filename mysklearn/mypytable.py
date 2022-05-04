@@ -7,7 +7,7 @@ from mysklearn import myutils
 # TODO: copy your mypytable.py solution from PA2-PA3 here
 import copy
 import csv
-#from tabulate import tabulate # uncomment if you want to use the pretty_print() method
+from tabulate import tabulate # uncomment if you want to use the pretty_print() method
 # install tabulate with: pip install tabulate
 
 # required functions/methods are noted with TODOs
@@ -34,10 +34,10 @@ class MyPyTable:
             data = []
         self.data = copy.deepcopy(data)
 
-    # def pretty_print(self):
-    #     """Prints the table in a nicely formatted grid structure.
-    #     """
-    #     print(tabulate(self.data, headers=self.column_names))
+    def pretty_print(self):
+        """Prints the table in a nicely formatted grid structure.
+        """
+        print(tabulate(self.data, headers=self.column_names))
 
     def get_shape(self):
         """Computes the dimension of the table (N x M).
