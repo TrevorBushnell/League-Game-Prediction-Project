@@ -1,7 +1,7 @@
 import os
 import pickle
 from flask import Flask, jsonify, request
-from sklearn.tree import DecisionTreeClassifier 
+from mysklearn.myclassifiers import MyKNeighborsClassifier 
 import mysklearn.myutils
 import mysklearn.myutils as myutils
 
@@ -19,17 +19,14 @@ import mysklearn.myevaluation as myevaluation
 import copy
 import numpy as np
 
-# now we create a flask app
-# by default flask run on port 5000
+
 app = Flask(__name__)
 
-# now we need to define "routes"
-# a route is a function that handles a request
-# lets have a route for the root index page
+
 @app.route("/", methods=["GET"])
 def index():
-    # we can return content and status code
-    return "<h1>Welcome to Ben Lombardi and Trevor Bushnell's League of Legends Prediction app!!</h1><br><h1>The attribute domains are : <br> {'blueEliteMonsters': ['-1.0 - 0.0', '0.0 - 1.0', '1.0 - 2.0'], 'blueDragons': ['0.0', '1.0'], 'blueGoldDiff': ['-9152.0 - -7360.0', '1608.0 - 3400.0', '3400.0 - 5192.0', '5192.0 - 6984.0', '6984.0 - 8776.0'], 'blueExperienceDiff': ['-8290.0 - -6627.0', '1696.0 - 3359.0', '3359.0 - 5022.0', '5022.0 - 6685.0', '6685.0 - 8348.0']}<h1>", 200
+    # TODO: add attribute domains for kd Ratio
+    return "<h1>Welcome to Ben Lombardi and Trevor Bushnell's League of Legends Prediction app!!</h1><br><h1>The attribute domains are : <br> blueEliteMonsters: [-1.0 - 0.0, 0.0 - 1.0, 1.0 - 2.0], blueDragons: [0.0, 1.0], blueGoldDiff: [-9152.0 - -7360.0, 1608.0 - 3400.0, 3400.0 - 5192.0, 5192.0 - 6984.0, 6984.0 - 8776.0], blueExperienceDiff: [-8290.0 - -6627.0, 1696.0 - 3359.0, 3359.0 - 5022.0, 5022.0 - 6685.0, 6685.0 - 8348.0] <h1>", 200
 
 # now the /predict route
 @app.route("/predict", methods=["GET"])
@@ -40,9 +37,11 @@ def predict():
     dragons = request.args.get("blueDragons", "")
     gold_diff = request.args.get("blueGoldDiff", "")
     exp_diff = request.args.get("blueExperienceDiff", "")
+    # TODO Uncomment line below
+    #kd = request.args.get("kdRatio", "")
     print("level:", monsters, dragons, gold_diff, exp_diff)
 
-    # TODO: fix the hardcoding
+    # TODO add kddiff to function call
     prediction = predict_winner([monsters,
        dragons, gold_diff, exp_diff])
     # if anything goes wrong, predict_interviewed_well()
@@ -53,14 +52,9 @@ def predict():
     return "Error making prediction", 400
 
 def predict_winner(instance):
-    # we need to traverse the interview tree
-    # and make a prediction for instan
-    # how do we get the tree here?
-    # generally, we need to save a trained
-    # ML mode from another process for use later
-    # (in this process)
-    # enter pickling
-    # unpickle tree.p
+
+    # Loading the dataset
+    # TODO: add kd_column
     df = MyPyTable()
     df.load_from_file("high_diamond_ranked_10min.csv")
     y = df.get_column("blueWins")
@@ -87,15 +81,23 @@ def predict_winner(instance):
     X = copy.deepcopy(X_data)
 
     y = copy.deepcopy(y_data)
+
+    y = [str(value) for value in y]
+
+    for j in range(len(X[0])):
+        binned_col = myutils.binning([row[j] for row in X])
+        for i in range(len(X)):
+            X[i][j] = binned_col[i]
+
+    #TODO: update trimming to includ kd
     for entry in X:
         del entry[0:8]
         del entry[2:9]
         del entry[4:]
-    tree_clf = MyDecisionTreeClassifier()
-    tree_clf.fit(X,y)
-    # prediction time!!
+    knn_clf = MyKNeighborsClassifier()
+    knn_clf.fit(X,y)
     try:
-        prediction = tree_clf.predict(instance)
+        prediction = knn_clf.predict(list([instance]))
         return prediction
     except:
         print("error")
