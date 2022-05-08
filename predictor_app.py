@@ -26,7 +26,7 @@ app = Flask(__name__)
 @app.route("/", methods=["GET"])
 def index():
     # TODO: add attribute domains for kd Ratio
-    return "<h1>Welcome to Ben Lombardi and Trevor Bushnell's League of Legends Prediction app!!</h1><br><h1>The attribute domains are : <br> blueEliteMonsters: [-1.0 - 0.0, 0.0 - 1.0, 1.0 - 2.0], blueDragons: [0.0, 1.0], blueGoldDiff: [-9152.0 - -7360.0, 1608.0 - 3400.0, 3400.0 - 5192.0, 5192.0 - 6984.0, 6984.0 - 8776.0], blueExperienceDiff: [-8290.0 - -6627.0, 1696.0 - 3359.0, 3359.0 - 5022.0, 5022.0 - 6685.0, 6685.0 - 8348.0] <h1>", 200
+    return "<h1>Welcome to Ben Lombardi and Trevor Bushnell's League of Legends Prediction app!!</h1><br><h1>The attribute domains are : <br> blueEliteMonsters: [-1.0 - 0.0, 0.0 - 1.0, 1.0 - 2.0], blueDragons: [0.0, 1.0], blueGoldDiff: [-9152.0 - -7360.0, 1608.0 - 3400.0, 3400.0 - 5192.0, 5192.0 - 6984.0, 6984.0 - 8776.0], blueExperienceDiff: [-8290.0 - -6627.0, 1696.0 - 3359.0, 3359.0 - 5022.0, 5022.0 - 6685.0, 6685.0 - 8348.0], KDRatio: [0 - 13, 13 - 14, 14 - 15, 15 - 16, 16 - 17] <h1>", 200
 
 # now the /predict route
 @app.route("/predict", methods=["GET"])
@@ -37,13 +37,11 @@ def predict():
     dragons = request.args.get("blueDragons", "")
     gold_diff = request.args.get("blueGoldDiff", "")
     exp_diff = request.args.get("blueExperienceDiff", "")
-    # TODO Uncomment line below
-    #kd = request.args.get("kdRatio", "")
-    print("level:", monsters, dragons, gold_diff, exp_diff)
+    kd = request.args.get("kdRatio", "")
+    print("level:", monsters, dragons, gold_diff, exp_diff, kd)
 
-    # TODO add kddiff to function call
     prediction = predict_winner([monsters,
-       dragons, gold_diff, exp_diff])
+       dragons, gold_diff, exp_diff, kd])
     # if anything goes wrong, predict_interviewed_well()
     # is going to return None
     if prediction is not None:
@@ -54,12 +52,25 @@ def predict():
 def predict_winner(instance):
 
     # Loading the dataset
-    # TODO: add kd_column
+    # TODO: add kd_column - this is done just to X
     df = MyPyTable()
     df.load_from_file("high_diamond_ranked_10min.csv")
     y = df.get_column("blueWins")
 
     X = copy.deepcopy(df.data)
+
+    # Adding the kd ratio to the X data
+    for i in range(len(X)):
+        if X[i][6] == 0:
+            X[i].append(0)
+        else:
+            X[i].append(X[i][5]/X[i][6])
+
+    for i in range(len(X)):
+        if X[i][25] == 0:
+            X[i].append(0)
+        else:
+            X[i].append(X[i][24]/X[i][25])
     # randomizing indexes to sort out a stratified sample
     X_indexes = [ i for i in range(len(X))]
     myutils.randomize_in_place(X_indexes,y,0)
@@ -89,11 +100,11 @@ def predict_winner(instance):
         for i in range(len(X)):
             X[i][j] = binned_col[i]
 
-    #TODO: update trimming to includ kd
     for entry in X:
         del entry[0:8]
         del entry[2:9]
-        del entry[4:]
+        del entry[4:-2]
+        del entry[-1]
     knn_clf = MyKNeighborsClassifier()
     knn_clf.fit(X,y)
     try:
@@ -122,5 +133,5 @@ if __name__ == "__main__":
     # heroku is going to set the port for our app
     # to use via an enviroonment variable
     port = os.environ.get("PORT", 5000)
-    app.run(debug=True, port=port, host="127.0.0.1") # TODO: turn off debug
+    app.run(debug=False, port=port, host="127.0.0.1") # TODO: turn off debug
     # when you deploy to production
